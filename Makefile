@@ -1,99 +1,39 @@
-#
-# 'make'        build executable file 'main'
-# 'make clean'  removes all .o and executable files
-#
-
-# define the Cpp compiler to use
+# 编译器与编译选项
 CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Wextra -g
+LDFLAGS = 
 
-# define any compile-time flags
-CXXFLAGS	:= -std=c++17 -Wall -Wextra -g
+# 目录定义
+SRC_DIR = src
+INCLUDE_DIR = include
+BUILD_DIR = build
+OUTPUT_DIR = output
+TARGET = $(OUTPUT_DIR)/main
 
-# define library paths in addition to /usr/lib
-#   if I wanted to include libraries not in /usr/lib I'd specify
-#   their path using -Lpath, something like:
-LFLAGS =
+# 源文件与目标文件
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRCS))
 
-# define output directory
-OUTPUT	:= output
+# 默认目标：构建可执行文件
+all: $(TARGET)
 
-# define source directory
-SRC		:= src
+# 确保输出目录存在（仅作为顺序依赖，不强制重建）
+$(OUTPUT_DIR):
+	mkdir -p $(OUTPUT_DIR)
 
-# define include directory
-INCLUDE	:= include
+# 构建可执行文件：依赖目标文件和output目录
+$(TARGET): $(OBJS) | $(OUTPUT_DIR)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@ $(LDFLAGS)
+	@echo "可执行文件已生成：$@"
 
-# define lib directory
-LIB		:= lib
+# 编译源文件为目标文件（自动创建build目录）
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
-ifeq ($(OS),Windows_NT)
-MAIN	:= main.exe
-SOURCEDIRS	:= $(SRC)
-INCLUDEDIRS	:= $(INCLUDE)
-LIBDIRS		:= $(LIB)
-FIXPATH = $(subst /,\,$1)
-RM			:= del /q /f
-MD	:= mkdir
-else
-MAIN	:= main
-SOURCEDIRS	:= $(shell find $(SRC) -type d)
-INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
-LIBDIRS		:= $(shell find $(LIB) -type d)
-FIXPATH = $1
-RM = rm -f
-MD	:= mkdir -p
-endif
-
-# define any directories containing header files other than /usr/include
-INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
-
-# define the C libs
-LIBS		:= $(patsubst %,-L%, $(LIBDIRS:%/=%))
-
-# define the C source files
-SOURCES		:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS)))
-
-# define the C object files
-OBJECTS		:= $(SOURCES:.cpp=.o)
-
-# define the dependency output files
-DEPS		:= $(OBJECTS:.o=.d)
-
-#
-# The following part of the makefile is generic; it can be used to
-# build any executable just by changing the definitions above and by
-# deleting dependencies appended to the file from 'make depend'
-#
-
-OUTPUTMAIN	:= $(call FIXPATH,$(OUTPUT)/$(MAIN))
-
-all: $(OUTPUT) $(MAIN)
-	@echo Executing 'all' complete!
-
-$(OUTPUT):
-	$(MD) $(OUTPUT)
-
-$(MAIN): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS) $(LIBS)
-
-# include all .d files
--include $(DEPS)
-
-# this is a suffix replacement rule for building .o's and .d's from .c's
-# it uses automatic variables $<: the name of the prerequisite of
-# the rule(a .c file) and $@: the name of the target of the rule (a .o file)
-# -MMD generates dependency output files same name as the .o file
-# (see the gnu make manual section about automatic variables)
-.cpp.o:
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -MMD $<  -o $@
-
-.PHONY: clean
+# 清理目标
 clean:
-	$(RM) $(OUTPUTMAIN)
-	$(RM) $(call FIXPATH,$(OBJECTS))
-	$(RM) $(call FIXPATH,$(DEPS))
-	@echo Cleanup complete!
+	rm -rf $(BUILD_DIR) $(OUTPUT_DIR)
+	@echo "已清理中间文件和输出文件"
 
-run: all
-	./$(OUTPUTMAIN)
-	@echo Executing 'run: all' complete!
+# 伪目标声明（避免与同名文件冲突）
+.PHONY: all clean

@@ -1,6 +1,8 @@
 #pragma once
 #include "ListNode.hpp"
 
+void run_list_test();
+
 template<typename T>
 class List{
 private:
