@@ -2,16 +2,43 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "gdb 调试 main", // 调试配置名称
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/output/main", // 关键：指向编译生成的可执行文件
-            "args": [], // 调试时传递的参数（无则留空）
-            "stopAtEntry": false, // 是否在程序入口处暂停（默认false）
-            "cwd": "${workspaceFolder}", // 调试时的工作目录（项目根目录）
-            "environment": [],
-            "externalConsole": false, // 是否使用外部终端（默认false，用VS Code内置终端）
-            "MIMode": "gdb",
+            "name": "gdb 调试 main (简要输出）", // 调试配置名称
+            "type": "cppdbg",       // 调试器类型（C++调试）
+            "request": "launch",    // 启动调试请求
+            "program": "${workspaceFolder}/output/main",    // 关键：指向编译生成的可执行文件
+            "args": [],                     // 调试时传递的参数（无则留空）
+            "stopAtEntry": true,            // 是否在程序入口处暂停（默认false）
+            "cwd": "${workspaceFolder}",    // 调试时的工作目录（项目根目录）
+            "environment": [],              // 环境变量（无则留空）
+            "externalConsole": false,       // 是否使用外部终端（默认false，用VS Code内置终端）
+            "MIMode": "gdb",                // 使用 gdb 作为调试器  
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: make 生成活动文件", // 关键：关联编译任务（必须和tasks.json的label一致）
+            "miDebuggerPath": "/usr/bin/gdb" // gdb路径（默认通常是这个，可根据实际修改）
+        },
+
+        {
+            "name": "gdb 调试 main (详细输出)", // 调试配置名称
+            "type": "cppdbg",       // 调试器类型（C++调试）
+            "request": "launch",    // 启动调试请求
+            "program": "${workspaceFolder}/output/main",    // 关键：指向编译生成的可执行文件
+            "args": [],                     // 调试时传递的参数（无则留空）
+            "stopAtEntry": true,            // 是否在程序入口处暂停（默认false）
+            "cwd": "${workspaceFolder}",    // 调试时的工作目录（项目根目录）
+            "environment": [
+                {
+                    "name": "TEST_VERBOSE",
+                    "value": "1"
+                }
+            ],              // 环境变量（无则留空）
+            "externalConsole": false,       // 是否使用外部终端（默认false，用VS Code内置终端）
+            "MIMode": "gdb",                // 使用 gdb 作为调试器  
             "setupCommands": [
                 {
                     "description": "为 gdb 启用整齐打印",

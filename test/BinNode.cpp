@@ -5,7 +5,7 @@
 
 using namespace std;
 
-static bool isVerbose() { static int v = getenv("TEST_VERBOSE") ? 1 : 0; return v; }
+static bool isVerbose() { static int v = getenv("TEST_VERBOSE") ? 1 : 0; return v; }    // 运行时是否启用详细输出
 
 void run_binnode_test() {
     cout << "===== 开始 BinNode 测试 =====" << endl;
