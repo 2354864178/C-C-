@@ -1,5 +1,8 @@
 #pragma once
 #include "ListNode.hpp"
+#include <cstddef>
+#include <stdexcept>
+#include <iostream>
 
 void run_list_test();
 
@@ -27,7 +30,7 @@ public:
     int deduplicate();  //  无序列表唯一化
     
     T remove(ListNodePosi(T) p);                //  节点删除，返回被删节点
-    bool valid (ListNodePosi(T) p);             //  判断节点是否合法
+    bool valid (ListNodePosi(T) p) const;;             //  判断节点是否合法
     T& operator[](Rank index) const;            //  重载[]，支持[]访问
     Rank size() const {return _size;}           //  获取列表大小
     bool empty() const {return _size <= 0;}     //  判空
@@ -100,7 +103,7 @@ T& List<T>::operator[](Rank index) const {
 }
 
 template <class T>
-bool List<T>::valid (ListNodePosi(T) p){
+bool List<T>::valid (ListNodePosi(T) p) const {
     return p && ( trailer != p ) && ( header != p );
 }
 
@@ -209,12 +212,14 @@ int List<T>::uniquify(){
 
 template <class T>
 ListNodePosi(T) List<T>::search (T const& e, int n, ListNodePosi(T) p) const{
-    while(n-->=0){
-        p = p->pred;
-        if(p->data <= e) break;
+    while (n-- > 0) {
+        if (!p) return nullptr;
+        p = p->pred;            // 向前查找
+        if (!p || p == header) return nullptr; // 到达 header 或无效 -> 失败
+        if (p->data <= e) return p;
     }
-    return p;
-}   //  失败时，返回区间左边界的前驱（可能是header）
+    return nullptr; // 未找到匹配的节点
+}   //  失败时，返回 nullptr
 
 template <class T>
 ListNodePosi(T) List<T>::search (T const& e) const{
@@ -238,27 +243,56 @@ ListNodePosi(T) List<T>::selectMax(){
 
 template <class T>
 void List<T>::reverse(){    
-    if (_size <= 1) return; 
-    ListNodePosi(T) current = header->succ;  // 指向第一个实际元素
-    ListNodePosi(T) nextNode;                // 用于保存下一个节点
-    this->header->succ = this->trailer;
-    this->trailer->pred = this->header;
-    while(current != trailer){
-        nextNode = current->succ;
-        current->pred = this->header;
-        current->succ = this->header->succ;
-        if (header->succ != nullptr) this->header->succ->pred = current;
-        current = nextNode;
+    if (_size <= 1) return;
+    // 简单安全地通过交换数据实现反转（不变更节点链接）
+    ListNodePosi(T) left = header->succ;
+    ListNodePosi(T) right = trailer->pred;
+    int verbose = getenv("TEST_VERBOSE") ? 1 : 0;
+    if (verbose) std::cerr << "反转：大小=" << this->_size << "\n";
+    for (int i = 0; i < this->_size / 2; ++i) {
+        if (verbose) std::cerr << "  swap i=" << i << " values=" << left->data << "," << right->data << "\n";
+        std::swap(left->data, right->data);
+        left = left->succ;
+        right = right->pred;
     }
+    if (verbose) std::cerr << "反转完成\n";
 }
 
 template <class T>
 void List<T>::insertionsort(ListNodePosi(T) p, int n){
-    for(int r = 0; r < n; r++){
-        ListNodePosi(T) q=this->search(p->data, r, p);
-        this->insertAfter(q, p->data);
-        p = p->succ;
-        this->remove(p->pred);
+    int verbose0 = getenv("TEST_VERBOSE") ? 1 : 0;
+    if (verbose0) std::cerr << "插入排序：n=" << n << "\n";
+    if (n < 2) return;
+    ListNodePosi(T) cur = p->succ; // 从第二个元素开始
+    for (int r = 1; r < n; ++r) {
+        ListNodePosi(T) next = cur->succ;
+        T val = cur->data;
+        int verbose = getenv("TEST_VERBOSE") ? 1 : 0;
+        // 不打印过长的地址信息，避免输出混乱；保留简短调试项
+        if (verbose) std::cerr << "  插入排序轮次 r=" << r << " 值=" << val << "\n";
+        // 在已排序区间 [p, cur) 中寻找插入点，从后向前扫描
+        ListNodePosi(T) q = cur->pred;
+        while (q != header && q != p->pred && q->data > val) q = q->pred;
+        if (verbose) std::cerr << "    选定 q=" << (q!=header ? std::to_string(q->data) : std::string("<头结点>")) << "\n";
+
+        // 先将 cur 从当前链表中摘除
+        cur->pred->succ = cur->succ;
+        cur->succ->pred = cur->pred;
+
+        // 插入到 q 后（如果 q == p->pred, 则插入到区间最前面，即在 p 之前）
+        if (q == p->pred) {
+            cur->pred = p->pred;
+            cur->succ = p;
+            if (p->pred) p->pred->succ = cur;
+            p->pred = cur;
+        } else {
+            cur->pred = q;
+            cur->succ = q->succ;
+            q->succ->pred = cur;
+            q->succ = cur;
+        }
+
+        cur = next;
     }
 }
 

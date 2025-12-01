@@ -1,4 +1,6 @@
 #pragma once
+#include "ListNode.hpp"
+#include <stdexcept>
 
 using Rank=int; //同(typedef int Rank;)
 #define ListNodePosi(T) ListNode<T>* // 列表节点位置

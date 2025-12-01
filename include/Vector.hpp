@@ -1,5 +1,8 @@
 #pragma once
 #include <algorithm>
+
+void run_vector_test();
+
 using namespace std;
 using Rank=int;                 //  同(typedef int Rank;)
 const int DEFAULT_CAPACITY=3;   //  默认容量，同#define DEFAULT_CAPACITY 3
